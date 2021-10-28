@@ -44,7 +44,7 @@ def command_listar(path):
     #for x in os.listdir(aux_path):
 
 ##################################################################################
-##################  Nos permite acceder a un directorio dado una variable path  ##
+#########  Nos permite acceder a un directorio dado una variable path  ###########
 ##################################################################################
 
 def command_ir(aux_path):
@@ -57,5 +57,6 @@ def command_ir(aux_path):
         print("ir: El fichero o directorio no existe: {}".format(aux_path))
         
 main()
+
 
 

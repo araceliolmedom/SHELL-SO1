@@ -1,4 +1,4 @@
-import subprocess
+gtimport subprocess
 import os
 
 path_defect = "/home/" + os.getlogin()
@@ -42,19 +42,7 @@ def command_listar(path):
         print(x,end="  ")
     print("\n")
     #for x in os.listdir(aux_path):
-
-##################################################################################
-######## Nos permite acceder a un directorio dado por la variable aux path #######
-##################################################################################
-
-def command_ir(aux_path):
-    try:
-        #os. chdir método () se utiliza para cambiar el directorio de trabajo actual a la ruta especificada.
-        #os.path.abspath obtenemos el path absoluto
-        #os.path nos permite gestionar diferentes opciones relativas al sistema de ficheros como pueden ser ficheros, directorios, etc.
-        os.chdir(os.path.abspath(aux_path))
-    except Exception:
-        print("ir: El fichero o directorio no existe: {}".format(aux_path))
         
 main()
+#probando
 

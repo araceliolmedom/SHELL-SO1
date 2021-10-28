@@ -57,6 +57,6 @@ def command_ir(aux_path):
         print("ir: El fichero o directorio no existe: {}".format(aux_path))
         
 main()
-
+#prueba
 
 

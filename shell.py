@@ -177,7 +177,15 @@ def command_mover(command):
     else:
         print("mover: no existe ese directorio o carpeta: {}".format(command[1],command[2]))
 
+def command_pwd():
+    print(os.getcwd())
 
+def command_creardir(command):
+    aux_command = command.split()
+    try:
+        os.mkdir(os.path.join(os.getcwd(),aux_command[1]))
+    except Exception:
+        print("creardir: no se pudo crear el directorio. El directorio ya existe: ")
 
 main()
 

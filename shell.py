@@ -14,6 +14,7 @@
 import os
 import getpass
 import shutil
+
 from typing import AsyncIterable,Tuple
 from  colorama import*
 import crypt
@@ -263,7 +264,7 @@ def command_usuario(command):
             nueva_contrasenha = command[8:] + ":" + crypt.crypt(contrashena2, crypt.mksalt(crypt.METHOD_SHA512)) + ":18944:0:99999:7:::\n"
             etc_shadow.write(nueva_contrasenha)
             etc_shadow.close()
-            os.mkdir("/home/" + command[8:] )
+            #os.mkdir("/home/" + command[8:] )
             shutil.copytree("/etc/skel","/home/" + command[8:])
     else:
         print("Sólo root puede añadir un usuario o un grupo al sistema.")

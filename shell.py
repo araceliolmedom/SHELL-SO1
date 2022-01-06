@@ -1,307 +1,463 @@
-################################Hechos##################################
-#Listar
-#execute_command
-#ir
-#renombrar
-#pwd
-#copiar m
-#mover
-#creadir
-#usuario
-#contrasena
-#hacer todos los comandos simples y luego los dificiles
-#falta el help de algunos comandos
-import os
-import getpass
-import shutil
+from    logging import FileHandler,Formatter
+import  logging
+import  shutil
+from    colorama import Fore
+from    getpass import getuser
+import  os
+import  sys
+import  subprocess
+from    shutil import copyfile,copytree, move, which
+import  getpass
+import  crypt
+import  re
+import  datetime
+import  readline
+ruta  = ["/etc/passwd","/etc/shadow","/etc/group","/etc/skel","/etc/hostname","/etc/hosts"]
+log_format = "%(asctime)s %(message)s"
 
-from typing import AsyncIterable,Tuple
-from  colorama import*
-import crypt
-#from posixpath import split
-path_defect = "/home/" + os.getlogin()
+############################################################################
+readline.parse_and_bind("tab: complete")
+def complete(text, state):
+    """
+        función llamada por readline para completar el texto escrito
+    """
+    # Lista de posibilidades
+    posibilidades = ["listar", "contrasenha", "ir", "copiar", "mover", "permisos", "propietario", "addusuario"]
+     
+    # Encontramos las coincidencias
+    results = [x for x in posibilidades if x.startswith(text)] + [None]
+     
+    return results[state]
+readline.set_completer(complete)
+############################################################################
+def log_movimientos(msg):
+    LOG_MOVIMIENTOS_FILE = "/var/log/shell/movimientos.log"
+    LOG_FORMAT = ("%(asctime)s [%(levelname)s]: %(message)s")
+    LOG_LEVEL = logging.INFO
+    messaging_logger = logging.getLogger("Movimientos")
+    messaging_logger.setLevel(LOG_LEVEL)
+    messaging_logger_file_handler = FileHandler(LOG_MOVIMIENTOS_FILE)
+    messaging_logger_file_handler.setLevel(LOG_LEVEL)
+    messaging_logger_file_handler.setFormatter(Formatter(LOG_FORMAT))
+    messaging_logger.addHandler(messaging_logger_file_handler)
+    messaging_logger.info(getuser() + msg)
 
-'''# Maneja el flujo del programa #'''
-def main():
-    while(True):
-        
-        command = (input(Fore.GREEN + os.getlogin()+"@"+ os.uname().nodename  + Fore.BLUE + os.getcwd()+ ":"  + "$ " + Fore.WHITE )).strip()
-        if command =="exit" :
-            break
-        elif command == "help":
-            print("psh: shell py")
-        else:
-            execute_command(command)
-            
 
-'''# Verifica si el comando y llama a la funcion que lo ejecuta  #'''
+############################################################################
+def log_error(msg):
+    #error_ = getuser() + ":"  + msg
+  
+    LOG_SISTEMA_ERROR_FILE = "/var/log/shell/sistema_error.log"
+    LOG_FORMAT = ("%(asctime)s [%(levelname)s]: %(message)s")
+    LOG_LEVEL = logging.ERROR
 
-def execute_command(command):
 
-    ## Comando ir ##
 
-    if command[:3] == "ir " :
-        if command.count(" ") > 1 :
-            print("Demasidos parametros")
-        elif command[3:] == "--help":
-            print("ir [Directorio]\nir [--help]\n")
-            #posible error 
-        else:
-           command_ir(command[3:])
-    elif command == "ir":
-        command_ir(path_defect)
+    messaging_logger = logging.getLogger("Errores de sistema")
+    messaging_logger.setLevel(LOG_LEVEL)
+    messaging_logger_file_handler = FileHandler(LOG_SISTEMA_ERROR_FILE)
+    messaging_logger_file_handler.setLevel(LOG_LEVEL)
+    messaging_logger_file_handler.setFormatter(Formatter(LOG_FORMAT))
+    messaging_logger.addHandler(messaging_logger_file_handler)
+    messaging_logger.error(getuser() + msg)
 
-    ##Comando listar ##
-
-    elif command[:7] == "listar ":
-        if command.count(" ") >1:
-            print("listar : Demasiados parametros\nConsulte listar --help")
-        elif command[7:] == "--help":
-            print("listar : lista los elementos del directorio actual")
-        else:
-            print("listar : Argumento invalido")
-    elif command =="listar":
-        command_listar()
-
-    ##Comando renombrar##
-
-    elif command[:10] == "renombrar ":
-        if command.count(" ") > 2:
-            print("listar : Demasiados parametros\nConsulte listar --help")
-        else:
-            command_renombrar(command)
-    elif command == "renombrar":    
-        print("renombrar : faltan argumentos") 
     
-    ##Comando copiar ##
-
-    elif command[:7] == "copiar ":
-        if command.count(" ") >3:
-            print("listar : Demasiados parametros\nConsulte listar --help")
-        elif command[7:9] == "-R":
-            num = 0
-            command_copiar(command,num)
-            print("copiar directorio")
-        else:
-            num = 1
-            command_copiar(command,num)
-    elif command == "copiar":
-        print("copiar : Faltan argumentos")
-    
-    ##Comando mover ##
-
-    elif command[:6] == "mover " :
-        if command.count(" ") >3:
-            print("mover : Demasiados parametros\nConsulte listar --help")
-        else:
-            command_mover(command)
-    elif command == "mover":
-        print("mover: Faltan argumentos")
-
-    ##Comando pwd ##
-
-    elif command == "pwd":
-        command_pwd()
-
-    ##Comando crear_dir ##
-
-    elif command[:9] == "creardir ":
-        if command.count(" ") >2:
-            print("creardir : Demasiados parametros\nConsulte listar --help")
-        else:
-            command_creardir(command)
-    ## usario ##
-    elif command[:8] == "usuario ":
-        if command.count(" ") >2:
-            print("usuario : Demasiados parametros\nConsulte usuario --help")
-        elif command[8:] == "--help":
-            print("printear ayuda")
-        else:
-            command_usuario(command)
-
+############################################################################
+def ir(entrada):
+    ruta = entrada[1]
+    try:
+        os.chdir(os.path.abspath(ruta))  
+    except Exception:
+        msg = "->ir: El fichero o directorio no existe: {}".format(ruta)
+        print(msg)
+        log_error(msg)
     else:
-        print("shell : comando no encontrado consulte --help")
+        return "->ir : accedio a la ruta " + ruta  
+         
 
-def command_listar():
+############################################################################
+
+def ls(entrada):
     '''
         #os.listdir : lista los elementos de un registro
         #os.getcwd  : retorna en formato str el directorio de trabajo actual
     '''
-    for x in os.listdir(os.getcwd()):
-        if os.path.isdir(os.path.join(os.getcwd(),x)):
-            print(Fore.BLUE + x ,end="  ")
-        else:
-            print(Fore.WHITE + x ,end="  ")
+    actual_path = os.getcwd()
     print("\n")
+    for archivo in os.listdir(actual_path):
+        if os.path.isdir(os.path.join(actual_path,archivo)):
+            print(Fore.BLUE  + archivo ,end="  ")
+        else:
+            print(Fore.WHITE + archivo ,end="  ")
+    print("\n")
+    return "->listar: listo los elementos de la ruta " +  actual_path
 
-''' # Nos permite acceder a un directorio dada una variable path  #'''
+############################################################################
 
-def command_ir(command):
-    '''
-        #os. chdir : se utiliza para cambiar el directorio de trabajo actual a la ruta especificada.
-        #os.path.abspath : obtenemos el path absoluto
-        #os.path : nos permite gestionar diferentes opciones relativas al sistema de ficheros .
-    '''
-    try:
-        os.chdir(os.path.abspath(command))
-    except Exception:
-        print("ir: El fichero o directorio no existe: {}".format(command))
+def salir(entrada):   
+ exit()
 
-''' # Permite renombrar un archivo o un directorio #'''
+############################################################################
 
-def command_renombrar(command):
+def renombrar(entrada):
+    
     '''
-        #os.rename : renombra los archivos o carpetas
-        #os.path.join : nos permite juntar dos rutas y obtener una absoluta
+    #os.rename : renombra los archivos o carpetas
+    #os.path.join : nos permite juntar dos rutas y obtener una absoluta
     '''
-    aux_command = command.split()
+    elem_selec = os.path.join(os.getcwd(),entrada[1])
+    elem_modif = os.path.join(os.getcwd(),entrada[2])
   
-    if os.path.exists(os.path.join(os.getcwd(),aux_command[1])):
-        os.rename(aux_command[1],aux_command[2])
+    if os.path.exists(elem_selec):
+        os.rename(elem_selec,elem_modif)
+        return "->renombrar : se cambio el nombre de " +  elem_selec + " por " + elem_modif
+    
     else:
-       print("ir: El fichero o directorio no existe: {}".format(aux_command[1]))
+        msg = "renombrar: El fichero o directorio no existe: {}".format(elem_selec)
+        print(msg)
+        log_error(msg)
 
-''' # Permite renombrar un archivo o un directorio #'''
-def command_copiar(command,num):
+############################################################################
+
+def copiar(entrada):
 
     #os.path.join : permite juntar dos rutas
     #os.path.isfile : verifica si es un archivo retorna True o False
     #os.path.isdir : verifica si una ruta es una carpeta retorna True o False
     #shutil.copy : copia archivos y mantiene propiedad y permisos
 
-    aux_command = command.split()
-    if num:
+    opcion =  entrada[1]
+    if opcion != "-R":
+        origen     = os.path.join(os.getcwd(), entrada[1])
+        destino    = os.path.join(os.getcwd(), entrada[2])
         #Si existe y es un archivo
-        if os.path.isfile(os.path.join(os.getcwd(), aux_command[1])):
-        
-            if os.path.isdir(os.path.join(os.getcwd(),aux_command[2])) or os.path.isfile(os.path.join(os.getcwd(),aux_command[2])):
-                shutil.copy(os.path.join(os.getcwd(),aux_command[1]), os.path.join(os.getcwd(),aux_command[2]))
-            else:
-                print("copiar: El fichero o directorio no existe: {}".format(os.path.join(os.getcwd(),aux_command[2])))
+        if os.path.isfile(origen):
+            shutil.copy(origen, destino)
+            msg = "->copiar : se copio el archivo " + origen + " a " + destino
+            
+            log_movimientos(msg)
         else:
-            print("copiar: El fichero o directorio no existe: {}".format(os.path.join(os.getcwd(),aux_command[1])))
+            msg = "copiar: El archivo no existe : " + origen
+            print(msg)
+            log_error(msg)
     else:
-        if os.path.isdir(os.path.join(os.getcwd(),aux_command[2])) :
-            if os.path.isdir(os.path.join(os.getcwd(),aux_command[3])):
-                shutil.copytree(os.path.join(os.getcwd(),aux_command[2]),os.path.join(os.getcwd(),aux_command[3]))
+        origen     = os.path.join(os.getcwd(), entrada[2])
+        destino    = os.path.join(os.getcwd(), entrada[3])
+        if os.path.isdir(origen):
+            if os.path.isdir(destino):
+                shutil.copytree(origen,destino)
+                return "->copiar : se copio el archivo " + origen + " a " + destino
             else:
-                print("copiar: El fichero o directorio no existe: {}".format(os.path.join(os.getcwd(),aux_command[3])))
+                msg = "copiar: El  directorio no existe : " + destino 
+                print(msg)
+                log_error(str(msg))
         else:
-           print("copiar: El fichero o directorio no existe: {}".format(os.path.join(os.getcwd(),aux_command[2])))
+           msg = "copiar: El directorio no existe : " + origen
+           print(msg)
+           log_error(msg)
 
-def command_mover(command):
-    aux_command = command.split()
-    if os.path.exists(os.path.join(os.getcwd(),aux_command[1])) and os.path.exists(os.path.join(os.getcwd(),aux_command[2])):
-        shutil.move(os.path.join(os.getcwd(),aux_command[1]),os.path.join(os.getcwd(),aux_command[2]))
+############################################################################
+
+def mover(entrada):
+    origen  = os.path.join(os.getcwd(),entrada[1])
+    destino = os.path.join(os.getcwd(),entrada[2])
+
+    if os.path.exists(origen) and os.path.exists(destino):
+        shutil.move(origen,destino)
+        return "->mover : se movio el archivo " + origen + " a " + destino
     else:
-        print("mover: no existe ese directorio o carpeta: {}".format(command[1],command[2]))
+        msg = "mover: no existe ese directorio o carpeta: {}".format(origen,destino)
+        print(msg)
+        log_error(msg)
 
-def command_pwd():
-    print(os.getcwd())
 
-def command_creardir(command):
-    aux_command = command.split()
-    try:
-        os.mkdir(os.path.join(os.getcwd(),aux_command[1]))
-    except Exception:
-        print("creardir: no se pudo crear el directorio. El directorio ya existe: ")
+############################################################################
+
+def permiso(entrada):
+    archivo = entrada[0]
+    if len(entrada[1]>3 and len(entrada[1]<3)):print("permisos : Error al cargar los permisos")
+    else:
+        num = int(entrada[1],8)
+        try:
+            os.chmod(archivo,num)
+        except Exception as er:
+            msg = "permisos : Error no se puedo realizar la operacion."
+            print(msg)
+            log_error(msg)
+        else:
+            return "->permiso : se modifico el permiso del archivo " + archivo + " a " + num
+           
+            
+############################################################################
+
+def propietario(entrada):
+   #root()
+    path = os.path.abspath(entrada[1])
+    usuario = entrada[2]
+    grupo   = entrada[3]   
+    if existe_usuario(usuario) :
+        if existe_grupo(grupo) :    
+            chown_recuersivo(path,usuario)
+            return "->propietario : se cambio el duenho del archivo " + path 
+        else:
+            msg = "propietario : No existe el grupo : {} ".formatformat(grupo)
+            print(msg)
+            log_error(msg)
+    else:
+        msg = "propietario : No existe el usuario : {} ".format(usuario)
+        print(msg)
+        log_error(msg)
+
+############################################################################
+
+def root():
+    #es una herramienta que usaremos mas tarde V:
+    #args = ['sudo', sys.executable] + sys.argv + [os.environ]
+    path  =  os.path.abspath("/bin/propietario.py")
+
+    proc  =  subprocess.call(['sudo',sys.executable ,path])
+
+############################################################################
 
 def is_root():
     #os.getuid no retorna el id del grupo 
     #si os.getuid retorna true estonces  no es usuario root
-    print(os.getuid())
-    if os.getuid()== 0 :
-        return True
+    if os.getuid()== 0 :return True
     return False
-def command_usuario(command):
-    ban = True
-    if is_root():
-        etc_passwd = open("/etc/passwd" ,"r+")
-        for linea in etc_passwd:
-            aux_linea = linea.split(":")
-            usuario = aux_linea[0]
-            if int(aux_linea[2]) >=1000 and int(aux_linea[2])<2000:
-                uid = aux_linea[2]
-                if usuario[0] == command[8:]:
-                    print("usuario : El usuario " + command[8:] +"ya exite ")
-                    ban = False
-                    break
-        if ban :
-            nuevo_uid = int(uid) + 1
 
-            print("Añadiendo el usuario " + "'" + command[8:]+ "'..../n")
-            print("Añadiendo el nuevo grupo " + "'" + command[8:]+ "'..../n")
-            print("Añadiendo el nuevo usuario " + "'" + command[8:] + "'" + "(" + str(uid)+ ")" + "con grupo " + command[8:] + "....")
+############################################################################
+
+def existe_usuario(usuario):
+    lineas  = []
+    i = 0
+    with open(ruta[0]) as archivo:
+        #modificar esta parte
+        for linea in archivo:
+            lineas.append(linea.strip().split(":"))
+        for i in range(len(lineas)):
+            if usuario == lineas[i][0]:
+                return True
+    return False
+
+def existe_grupo(grupo):
+    lineas  = []
+    i = 0
+    with open(ruta[2]) as archivo:
+        #modificar esta parte
+        for linea in archivo:
+            lineas.append(linea.strip().split(":"))
+        for i in range(len(lineas)):
+            if grupo == lineas[i][0]:
+                return True
+    return False
+def nuevo_uid():
+
+    with open(ruta[0]) as lineas:
+        for linea in lineas:
+            aux_linea = linea.split(":")
+            uid = int(aux_linea[3]) if int(aux_linea[3])>1000 else 1000
+
+    return uid + 1
+
+############################################################################
+
+def add_usuario(entrada):
+    usuario  = entrada[1]
+    if is_root():
+        if existe_usuario(usuario):
+            msg = "addusuario : El usuario " + usuario + " ya existe"
+            print(msg)
+            log_error(msg)
+        else:
+            print("Añadiendo el usuario "            + "'" + usuario + "'....")
+            print("Añadiendo el nuevo grupo "        + "'" + usuario + "'....")
+            print("Añadiendo el nuevo usuario "      + "'" + usuario + "'" + "(" 
+                    + str(nuevo_uid())+ ")" + "con grupo " + usuario + "....")
+            while(True):
+                contrashena  = getpass.getpass("Nueva contraseña : ")
+                contrashena2 = getpass.getpass("Vuelva a escribir la nueva contraseña:")
+                if contrashena == contrashena2: break 
+                else:print("Las contrasenhas no coinciden")
+            print("Introduzca el nuevo valor, o presione INTRO para el predeterminado")
+            nombre              = input("               Nombre completo :")
+            nro_tel             = input("               Numero de Telefono :")
+            otro                = input("               Otro[] :")
+            print("Ingrese su horario de trabajo : ")
+            while(True):
+                inicio = input("Hora de inicio : ")
+                if validar_h_trabajo(inicio):break
+                else:print("addusuario : respete el formato")
+            while(True):
+                inicio = input("Hora de inicio : ")
+                if validar_h_trabajo(inicio):break
+                else:print("addusuario : respete el formato")
+                 
+            while(True):
+                local_host      = input("          Local host :")
+                if local_host != " ": break
+                else: print("Error al cargar los datos")
+            resp = input("¿Es correcta la información? [S/n]")
+            if resp == "S" :
+                #name_host(local_host)
+                #agg nuevo usuario#
+                grupo           =  str(nuevo_uid())
+                nameygroup      =  usuario   + ":x:" + grupo   + ":"  + grupo + ":" 
+                other           =  nombre    +  ","  + nro_tel + ","  + otro  + "," + ":" 
+                home            =  "/home/" + usuario
+                interprete      =  ":/bin/bash\n"
+                nuevo_usuario   = nameygroup + other + home    + interprete
+                with open(ruta[0],"a") as linea: 
+                    linea.write(nuevo_usuario)
+                #agg nuevo contrasenha#
+                cifrado         =  ":" + crypt.crypt(contrashena2,crypt.mksalt(crypt.METHOD_SHA512)) 
+                adicionales     =  ":18944:0:99999:7:::\n"
+                nueva_contra    = usuario + cifrado + adicionales
+                with open(ruta[1], "a") as linea:
+                    linea.write(nueva_contra)
+                #agg nuevo grupo#
+                add_grupo(usuario,grupo)
+                shutil.copytree(ruta[3],home)
+                chown_recuersivo(home,usuario)
+
+                return "->addusuario : agrego al usuario " + usuario
+            else:
+                msg = print("addusuario : se cancelo el registro")
+    else:
+        msg = "addusuario : Sólo root puede añadir un usuario o un grupo al sistema."
+        print(msg)
+        log_error(msg)
+
+############################################################################
+
+def chown_recuersivo(home,usuario):
+
+
+    for ruta_relativa,directorios,archivos in os.walk(home):
+        ruta_absoluta = os.path.normpath(os.path.abspath(os.path.join(home,ruta_relativa)))
+        shutil.chown(ruta_relativa,usuario,usuario)
+        for items in directorios:
+            ruta_absoluta = os.path.normpath(os.path.abspath(os.path.join(home,items)))
+            shutil.chown(ruta_absoluta,usuario,usuario)
+        for items in archivos:
+            ruta_absoluta = os.path.normpath(os.path.abspath(os.path.join(home,items)))
+            shutil.chown(ruta_absoluta,usuario,usuario)
+
+
+def add_grupo(usuario,grupo):
+    if existe_grupo(grupo):
+        return False
+    else:
+        with open(ruta[2],"a") as lineas:
+            nuevo_grupo = usuario + ":" + "x" + ":" + grupo + ":\n"
+            lineas.write(nuevo_grupo)
+        return True
+
+############################################################################
+
+def password(entrada):
+    #root(entrada)
+    usuario = entrada[1]
+    lineas = []
+    if existe_usuario(usuario):
+        while(True):
             contrashena  = getpass.getpass("Nueva contraseña : ")
             contrashena2 = getpass.getpass("Vuelva a escribir la nueva contraseña:")
-            if contrashena2 != contrashena:
-                print("Las contraseñas no coinciden.")
-            else:
-                print("Introduzca el nuevo valor, o presione INTRO para el predeterminado")
-                nombre_completo    = input("          Nombre completo :")
-                nro_telefono  = input("         Numero de Telefono :")
-                otro = input("         Otro :")
-                while(True):
-                    horario_trabajo = input("          Horario de Trabajo:")
-                    local_host= input("          Local host :")
-                    if horario_trabajo !=" " and local_host != " ":
-                        break
-            etc_group = open("/etc/group" ,"r+")
-
-            for linea in etc_group:
-                aux_linea = linea.split(":")
-                if int(aux_linea[2]) >=1000 and int(aux_linea[2])<2000:
-                    guid = aux_linea[2]
-            nuevo_guid = int(guid) + 1
-            nuevo_grupo = command[8:] + ":x:" + str(nuevo_guid) + "\n" 
-            etc_group.write(nuevo_grupo)
-            etc_group.close()
-
-            nuevo_usuario = command[8:] + ":" + str(nuevo_uid) + ":" + str(nuevo_guid) + ":" + nombre_completo  + "," + nro_telefono + "," + otro + "/home/" + command[8:] + "/bin/bash\n"
-            etc_passwd.write(nuevo_usuario)
-            etc_passwd.close()
-            etc_shadow = open("/etc/shadow","a")
-            nueva_contrasenha = command[8:] + ":" + crypt.crypt(contrashena2, crypt.mksalt(crypt.METHOD_SHA512)) + ":18944:0:99999:7:::\n"
-            etc_shadow.write(nueva_contrasenha)
-            etc_shadow.close()
-            #os.mkdir("/home/" + command[8:] )
-            shutil.copytree("/etc/skel","/home/" + command[8:])
+            if contrashena == contrashena2: break 
+            else:print("Las contrasenhas no coinciden")
+        cifrado =  crypt.crypt(contrashena2,crypt.mksalt(crypt.METHOD_SHA512)) 
+        with open(ruta[1],"r+") as archivo:
+            for linea in archivo:
+                lineas.append(linea.strip().split(":"))
+            archivo.seek(0)
+            for i in range(len(lineas)):
+                if usuario == lineas[i][0]:
+                    lineas[i][1] = cifrado
+                lineas[i] = ":".join(lineas[i])
+                archivo.write(lineas[i]+ "\n")
+        return "->contrasenha : se cambio la contrasenha del usuario  " + usuario 
+    
+                
     else:
-        print("Sólo root puede añadir un usuario o un grupo al sistema.")
-def command_password(command):
-    ban = True
-    existe = False
-    etc_passwd = open("/etc/passwd" ,"r")
-    for linea in etc_passwd:
-        aux_linea = linea.split(":")
-        usuario = aux_linea[0]
-        if usuario[0] == command[11:]:
-            existe = True
-            break
-    if existe:
-        while(ban):
-            password = input("Nueva contraseña : ")
-            if not password :
-                print("contraseña  : Error la contrasena no puede estar vacia") 
-                ban = True
-            ban = False
-        ban = True
-        while(ban):
-            new_password = input("Vuelva a ingresar la contraseña : ")
-            if not new_password :
-                print("contraseña  : Error la contraseña no puede estar vacia")
-                ban = True
-            elif new_password != password:
-                print("contraseña : las contraseña no coinciden  ")
-            else: ban = False
-        print("contraseña actualizada")
-        etc_shadow = open("/etc/shadow","a")
-        nueva_contrasenha = command[11:] + ":" + crypt.crypt(new_password, crypt.mksalt(crypt.METHOD_SHA512)) + ":18944:0:99999:7:::\n"
-        etc_shadow.write(nueva_contrasenha)
-        etc_shadow.close()
+        msg = "password : El usuario no existe"
+        print(msg)
+        log_error(msg)
+
+############################################################################
+#modificar 
+def name_host(host_name):
+    lineas   = []
+    host     = os.uname().nodename
+    with open(ruta[4],"w") as archivo:
+        archivo.write(host_name)
+    with open(ruta[5],"r+") as archivo:
+        for linea in archivo:
+            if host in linea:
+                linea = linea.rename(host_name,host_name)
+        print(lineas)
+        
+        for i in range(len(lineas)):
+            lineas[i] = "\t".join(lineas[i])
+            archivo.write[lineas[i] + "\n"]
+            
+############################################################################
+def grep(entrada):
+    palabra = entrada[1]
+    ruta    = entrada[2]
+    with open(ruta,"r") as archivo:
+        for linea in archivo:
+            linea = linea.strip()
+            if re.search(palabra, linea):
+                print(linea.replace(palabra,Fore.YELLOW + palabra + Fore.WHITE))
+    return "->grep : se busco la palabra " + palabra + " en " + ruta
+
+############################################################################
+def validar_h_trabajo(hora):
+   
+    try:
+        datetime.datetime.strptime(hora,'%H:%M')
+    except Exception :
+        print("addusuario: Respete el formato del la hora")
+        return False
     else:
-        print("contraseña : no existe el usuario " + command[11:])
+        return True
+        
+############################################################################
+
+def hora_fecha():
+    return  datetime.datetime.now()
+
+############################################################################
+
+
+    
+
+dic_command= {"ir"       :[ir,2]        , "salir":[salir,1],"listar"     :[ls,1],"copiar":[copiar,3],
+              "renombrar":[renombrar,3] , "mover":[mover,3],"propietario":[propietario,4],"addusuario":[add_usuario,2],
+              "password" :[password,2]  , "grep" :[grep,3] ,"horario"    :[validar_h_trabajo,1]}
+def main():
+    ##Datos##
+    
+    while(True):
+        existe = False
+        entrada = input(Fore.GREEN + getuser() + "@" + os.uname().nodename +
+                        Fore.WHITE +  ":"      +  Fore.BLUE + os.getcwd()  +  
+                        "$ "       + Fore.WHITE).split()
+        
+        for cmd in dic_command:
+            if cmd == entrada[0]:
+                existe = True
+                if len(entrada) == 1 and dic_command[entrada[0]][1] == 1:
+                    log_movimientos(dic_command[cmd][0](entrada))
+                elif len(entrada) == dic_command[entrada[0]][1]:
+                    log_movimientos(dic_command[cmd][0](entrada))
+                else:
+                    msg = cmd + ": Error de argumentos"
+                    print(msg)
+                    log_error(msg)
+        if existe == False:
+            msg = "shell : comando no encontrado consulte --help"
+            print(msg)
+            log_error(msg)
+        #else llamar a las otras funciones
 
 main()
-
-

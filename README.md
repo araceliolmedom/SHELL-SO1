@@ -1,4 +1,4 @@
-# Desarrollo de Shell
+# Desarrollo de una Shell
 
 Desarrollar una Shell para el sistema LFS que registre los movimientos y operaciones de los usuarios.
 
@@ -6,7 +6,7 @@ Desarrollar una Shell para el sistema LFS que registre los movimientos y operaci
 
 _Estas instrucciones te permitirán obtener una copia del proyecto en funcionamiento en tu máquina local para propósitos de desarrollo y pruebas._
 
-Mira **[los requerimientos](http://https://docs.google.com/document/d/1GbbyP_-mYtXvvseUTdt9zYdswfoo7GoXmYU0FxtmyxE/edit "Los requerimientos")** para conocer más sobre el proyecto.
+Mira **[los requerimientos](https://docs.google.com/document/d/1hnZyqtkXD1qnSWr0w63FX_THB927yB0PRf3wiYfhBbQ/edit?usp=sharing)** para conocer más sobre el proyecto.
 
 
 ### Pre-requisitos 📋
@@ -159,4 +159,3 @@ _Todos aquellos que ayudaron a levantar el proyecto desde sus inicios_
 
 * Al profesor Felipe Stuardo
 * A los ayudantes de catedra José y Cristobal 
-

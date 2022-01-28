@@ -13,21 +13,21 @@ Mira **[los requerimientos](http://https://docs.google.com/document/d/1GbbyP_-mY
 
 _Para el correcto funcionamiento de la shell, recomendamos instalar la siguiente libreria_
 ```
-python3 -m pip install psutil
+Python 3 -m pip install psutil
 ```
 
 _Antes de empezar con la instalación es importante crear un log de usuarios del shell, en el directorio /var/log/shell_
 
 ```
-$touch /var/log/shell/users.log
+$touch /var/log/shell/usario_horario.log
+$touch /var/log/shell/horario_de_trabajo.log
+$touch /var/log/shell/movimientos.log
+$touch /var/log/shell/sistema_error.log
+$touch /var/log/shell/transferencia.log
 ```
 _Nos aseguramos de que el directorio tenga todos los permisos_
 ```
 $chmod -R 777 /var/log/shell
-```
-_Y le agregamos la informacion de nuestro usuario_
-```
-$vi /var/log/shell/users.log
 ```
 
 ### Instalación 🔧
@@ -159,3 +159,4 @@ _Todos aquellos que ayudaron a levantar el proyecto desde sus inicios_
 
 * Al profesor Felipe Stuardo
 * A los ayudantes de catedra José y Cristobal 
+

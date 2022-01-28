@@ -28,7 +28,8 @@ def complete(text, state):
         función llamada por readline para completar el texto escrito
     """
     # Lista de posibilidades
-    posibilidades = ["listar", "contrasenha", "ir", "copiar", "mover", "permisos", "propietario", "addusuario"]
+    posibilidades = ["listar", "password", "ir", "copiar", "mover", "permisos", "propietario", "addusuario", "help",
+    "creardir","renombrar", "pwd","grep","levantar", "matar","transferencias", "salir"]
      
     # Encontramos las coincidencias
     results = [x for x in posibilidades if x.startswith(text)] + [None]
@@ -265,18 +266,18 @@ def permiso(entrada):
     """
         Modifica los permisos sobre un archivo o carpeta
     """
-    archivo = entrada[0]
-    if len(entrada[1]>3 and len(entrada[1]<3)):print("permisos : Error al cargar los permisos")
+    archivo = entrada[1]
+    if len(entrada[2])>3 and len(entrada[2])<3:print("permisos : Error al cargar los permisos")
     else:
-        num = int(entrada[1],8)
+        num = int(entrada[2],8)
         try:
             os.chmod(archivo,num)
-        except Exception as er:
+        except Exception :
             msg = "permisos : Error no se puedo realizar la operacion."
             print(msg)
             log_error(msg)
         else:
-            return "->permiso : se modifico el permiso del archivo " + archivo + " a " + num
+            return "->permiso : se modifico el permiso del archivo " + archivo + " a " + str(num)
            
             
 ############################################################################
@@ -652,7 +653,8 @@ def transFtp():
 def ayudaa(entrada):
     print(" ir  [ruta] \n addusuario [usuario] \n listar [sin parametros] \n copiar [origen,destino] ")
     print(" renombrar [elemento seleccionado,elemento a modificar] \n mover  [origen][destino] \n propietario [ruta,usuario,grupo]")
-    print(" salir [sin parametros] \n password [usuario] \n grep [palabra,ruta] \n ")
+    print(" salir [sin parametros] \n password [usuario] \n grep [palabra,ruta] \n pwd [sin parametros] ")
+    print(" levantar [sin parametros] \n matar [pid] \n transferencias [sin parametros]  \n permisos[]")
     
 ############################################################################
 def levantar(entrada):
@@ -699,7 +701,7 @@ def lsprocess(entrada):
 dic_command= {"ir"       :[ir,2]        , "addusuario":[add_usuario,2] ,"listar"    :[ls,1],"copiar"        :[copiar,3],
               "renombrar":[renombrar,3] , "mover"     :[mover,3],"propietario"      :[propietario,4],"salir":[salir,1],
               "password" :[password,2]  , "grep"      :[grep,3] ,"creardir"         :[crearDir,2]   , "ftp" :[transFtp,1],
-              "help"     :[ayudaa,1]    , "matar"     :[matar,2],"levantar"         :[levantar,1]}
+              "help"     :[ayudaa,1]    , "matar"     :[matar,2],"levantar"         :[levantar,1], "permisos" :[permiso,3]}
 ############################################################################
 def main():
     ##Datos##

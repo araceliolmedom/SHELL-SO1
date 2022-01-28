@@ -595,7 +595,7 @@ def crearDir(entrada):
         return "->creardir : se creo la ruta : " + ruta
 
 ############################################################################
-def transFtp():
+def transFtp(entrada):
     id = 0
     #pedimos los datos necesarios para realizar la conexion
     hostname    = input("Ingrese el nombre del host : ")
@@ -609,14 +609,14 @@ def transFtp():
     servidorFtp.encoding = "utf-8"
     #Ingresamos el nombre del archivo con su extension
     archivo = input("Ingrese el nombre del archivo con su extension")
-    opcion  = input("-1 Subir/n-2 Descargar /n-3 Ver")
+    opcion  = input("-1 Subir\n-2 Descargar \n-3 Ver")
 
     try:
         while True:
-            if opcion == 1:
+            if opcion == "1":
                 with open(archivo,"rb") as file:
                     #Subimos el archivo 
-                    servidorFtp.storbinary(f"RETR{archivo}",file)
+                    servidorFtp.storbinary(f"STOR {archivo}",file)
                     print("Subida Existosa!!!")
                     
                     #Listamos el contenido del servidor
@@ -628,7 +628,7 @@ def transFtp():
                     #Cerramos conexion
                     servidorFtp.quit()
                     break
-            elif opcion == 2:
+            elif opcion == "2":
                 with open(archivo,"wb") as file:
                     #descargamos el archivo
                     servidorFtp.retrbinary(f"RETR {archivo}",file.write)
@@ -642,7 +642,7 @@ def transFtp():
                     status =  1 #exitoso -> 1  #error -> 0
                     #log_transferencias(msg)
                     break
-            elif opcion == 3:
+            elif opcion == "3":
                 servidorFtp.dir()
                 opcion = int(input("-1 Subir/n-2 Descargar /n-3 Ver"))
     except Exception:
@@ -701,7 +701,8 @@ def lsprocess(entrada):
 dic_command= {"ir"       :[ir,2]        , "addusuario":[add_usuario,2] ,"listar"    :[ls,1],"copiar"        :[copiar,3],
               "renombrar":[renombrar,3] , "mover"     :[mover,3],"propietario"      :[propietario,4],"salir":[salir,1],
               "password" :[password,2]  , "grep"      :[grep,3] ,"creardir"         :[crearDir,2]   , "ftp" :[transFtp,1],
-              "help"     :[ayudaa,1]    , "matar"     :[matar,2],"levantar"         :[levantar,1], "permisos" :[permiso,3]}
+              "help"     :[ayudaa,1]    , "matar"     :[matar,2],"levantar"         :[levantar,1], "permisos" :[permiso,3],
+              "transferencias":[transFtp,1]}
 ############################################################################
 def main():
     ##Datos##

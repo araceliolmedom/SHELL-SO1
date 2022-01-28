@@ -72,63 +72,64 @@ $help
 ```
 Nos proporciona una lista rapida de los comandos y sus tipo de parametros.
 ```
-$ir [destino] 
+$ir [ruta] 
 ```
 Nos permite movernos de directorio del que estamos actualmente a uno especificado en [destino], destino puede ser un path a un directorio en especifico o puede ser el nombre de un directorio dentro del directorio actual.
 ```
-$creardir [directorio]
+$creardir [ruta]
 ```
 Nos permite crear un directorio con el nombre que especifiquemos en su parametro [directorio] que puede ser un path a una ubicacion especifica o puede ser solo el nombre si es que deseamos que el nuevo directorio se cree en la ubicacion actual.
 ```
-$listar
+$listar [sin parametro]
 ```
 Nos permite ver los archivos o directorios ubicados en el directorio actual
 ```
-$mover [origen]
+$mover [origen][destino]
 ```
 Nos permite cambiar la ubicacion del archivo o directorio especificado en el parametro [origen], al ejecutar el comando este nos requiere especificar el path del directorio de destino, es decir, el lugar al cual vamos a mover nuestro archivo/directorio.
 ```
-$renombrar [archivo]
+$renombrar [nombre del archivo actual][nuevo nombre del archivo]
 ```
 Nos permite cambiar el nombre del archivo o directorio especificado en [archivo], al ejecutar necesitamos especificar cual sera el nuevo nombre del archivo.
 ```
-$copiar [origen]
+$copiar [origen][destino]
+
 ```
 Nos permite copiar el archivo o directorio especificado en [origen] y al ejecutar nos requiere espeficicar el path o directorio de destino de la copia.
 ```
-$permisos [archivo]
+$permisos [archivo][permiso (octal)]
 ```
-Nos permite modificar los permisos del archivo o directorio especificado en [archivo], para ello, al ejecutar el comando nos pide especificar que permisos tendra el archivo lo cual escribimos en octal. *(1)
+Nos permite modificar los permisos del archivo o directorio especificado en [archivo], para ello, al ejecutar el comando nos pide especificar que permisos tendra el archivo lo cual escribimos en octal. 
 ```
-$propietario [archivo]
+$propietario [ruta][nombre de usuario][grupo]
 ```
-Nos permite modificar el propietario del archivo o directorio especificado en [archivo], para ello al ejecutar el comando, nos requiere el UID y GID del usuario quien sera propietario del archivo/directorio. *(2)
+Nos permite modificar el propietario del archivo o directorio especificado en [archivo], para ello al ejecutar el comando, nos requiere el UID y GID del usuario quien sera propietario del archivo/directorio. 
 ```
-$password
+$password [nombre de usuario]
 ```
 Nos permite cambiar la contraseña del usuario que estamos utilizando, primero nos pide la contraseña actual y luego elegimos la nueva contraseña
 ```
-$addusuario
+$addusuario [nombre de usuario]
 ```
-Nos permite crear un nuevo usuario, al ejecutar nos pide el nombre del nuevo usuario, la contraseña de este, su horario de trabajo y sus posibles IPs de conexion. *(3)
+Nos permite crear un nuevo usuario, al ejecutar nos pide el nombre del nuevo usuario, la contraseña de este, su horario de trabajo y sus posibles IPs de conexion.
 ```
-$pwd
+$pwd [sin parametro]
 ```
 _Nos permite conocer el directorio actual en el que estamos ubicados._
 ```
-$grep 
+$grep [palabra][ruta]
 ```
 _Imprime las líneas que contengan coincidencias_
 ```
-$levantar [ejecutable]
+$levantar [sin parametro]
 ```
 Nos permite agregar un demonio, que sera un [ejecutable] ubicado en el directorio actual.
 ```
-$matar [ejecutable]
+$matar [PID]
 ```
 Nos permite terminar el proceso ejecutado como demonio por [ejecutable].
 ```
-$transferencia [address]
+$transferencia [sin parametro]
 ```
 Nos permite realizar una transferencia ftp a la direccion especificada en [address]
 ```

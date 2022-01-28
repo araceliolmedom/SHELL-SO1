@@ -13,7 +13,7 @@ Mira **[los requerimientos](http://https://docs.google.com/document/d/1GbbyP_-mY
 
 _Para el correcto funcionamiento de la shell, recomendamos instalar la siguiente libreria_
 ```
-Python 3 -m pip install psutil
+python3 -m pip install psutil
 ```
 
 _Antes de empezar con la instalación es importante crear un log de usuarios del shell, en el directorio /var/log/shell_

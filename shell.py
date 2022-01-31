@@ -3,7 +3,6 @@ from    logging import FileHandler,Formatter, log
 import  logging
 import  shutil
 from signal import SIGSTOP
-from    colorama import Fore
 from    getpass import getuser
 import  os
 import  sys
@@ -700,7 +699,7 @@ def main():
     while(True):
         existe = False
         entrada = input(negrita + verde +  getuser()  + "@" + os.uname().nodename +
-                        blanco  +  ":"  +  Fore.BLUE  + os.getcwd()               +
+                        blanco  +  ":"  +  azul       + os.getcwd()               +
                         blanco  +  "$ " +  normal     + blanco).split()
         
         for cmd in dic_command:

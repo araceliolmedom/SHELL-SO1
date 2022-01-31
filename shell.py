@@ -16,9 +16,16 @@ import  datetime
 import  readline
 import  subprocess
 import  psutil
+import time
 import ftplib
 
-ruta  = ["/etc/passwd","/etc/shadow","/etc/group","/etc/skel","/etc/hostname","/etc/hosts"]
+ruta    = ["/etc/passwd","/etc/shadow","/etc/group","/etc/skel","/etc/hostname","/etc/hosts"]
+azul    = '\033[94m'
+verde   = '\033[92m'
+negrita = '\033[1m'
+rojo    = '\033[91m'
+blanco  = '\033[97m'
+normal  = '\033[0m'
 
 entra = str()
 ############################################################################
@@ -79,7 +86,8 @@ def log_usuarios(inicio,fin):
             messaging_logger.addHandler(messaging_logger_file_handler)
             messaging_logger.info(getuser() + msg1 + msg2)
         except Exception:
-            print("No se pudo crear el arhcivo de logs por favor consulte la guia de instalacion de la shell")
+            msg = "No existe el archivo logs usuarios por favor consulte la guia de instalacion de la shell"
+            printError(msg)
 ############################################################################
 def log_movimientos(msg):
     """
@@ -97,8 +105,9 @@ def log_movimientos(msg):
         messaging_logger.addHandler(messaging_logger_file_handler)
         messaging_logger.info(getuser() + msg)
     except Exception:
-        print("No se pudo crear el arhcivo de logs por favor consulte la guia de instalacion de la shell")
-
+        msg = "No existe el archivo logs movimientos por favor consulte la guia de instalacion de la shell"
+        printError(msg)
+        
 
 ############################################################################
 def log_error(msg):
@@ -117,25 +126,26 @@ def log_error(msg):
         messaging_logger.addHandler(messaging_logger_file_handler)
         messaging_logger.error(getuser() + msg)
     except Exception:
-        print("No se pudo crear el archivo de logs por favor consulte la guia de instalacion de la shell")
-
+        msg = "No existe el archivo logs sistema_error por favor consulte la guia de instalacion de la shell"
+        printError(msg)
 def log_transferencias(msg):
     """
         Escribe en transferencias.log todos errores producidos por transferencias ftp
     """
     try:
-        LOG_SISTEMA_ERROR_FILE = "/var/log/shell/transferencias.log"
+        LOG_TRANSFERENCIAS_FILE = "/var/log/shell/transferencias.log"
         LOG_FORMAT = ("%(asctime)s [%(levelname)s]: %(message)s")
         LOG_LEVEL = logging.ERROR
         messaging_logger = logging.getLogger("Errores de transterencias")
         messaging_logger.setLevel(LOG_LEVEL)
-        messaging_logger_file_handler = FileHandler(LOG_SISTEMA_ERROR_FILE)
+        messaging_logger_file_handler = FileHandler(LOG_TRANSFERENCIAS_FILE)
         messaging_logger_file_handler.setLevel(LOG_LEVEL)
         messaging_logger_file_handler.setFormatter(Formatter(LOG_FORMAT))
         messaging_logger.addHandler(messaging_logger_file_handler)
         messaging_logger.error(getuser() + msg)
     except Exception:
-        print("No se pudo crear el archivo de logs transferencias por favor consulte la guia de instalacion de la shell")
+        msg = "No existe el archivo logs transferencias por favor consulte la guia de instalacion de la shell"
+        printError(msg)
 
     
 ############################################################################
@@ -148,10 +158,11 @@ def ir(entrada):
         os.chdir(os.path.abspath(ruta))  
     except Exception:
         msg = "->ir: El fichero o directorio no existe: {}".format(ruta)
-        print(msg)
+        printError(msg)
         log_error(msg)
     else:
-        return "->ir : accedio a la ruta " + ruta  
+        msg = "->ir : accedio a la ruta " + ruta 
+        log_movimientos(msg)
          
 
 ############################################################################
@@ -165,11 +176,12 @@ def ls(entrada):
     print("\n")
     for archivo in os.listdir(actual_path):
         if os.path.isdir(os.path.join(actual_path,archivo)):
-            print(Fore.BLUE  + archivo ,end="  ")
+            print( negrita + azul + archivo ,end="  ")
         else:
-            print(Fore.WHITE + archivo ,end="  ")
+            print( negrita + blanco + archivo ,end="  ")
     print("\n")
-    return "->listar: listo los elementos de la ruta " +  actual_path
+    msg = "->listar: listo los elementos de la ruta " +  actual_path
+    log_movimientos(msg)
 
 ############################################################################
 
@@ -194,11 +206,12 @@ def renombrar(entrada):
   
     if os.path.exists(elem_selec):
         os.rename(elem_selec,elem_modif)
-        return "->renombrar : se cambio el nombre de " +  elem_selec + " por " + elem_modif
+        msg = "->renombrar : se cambio el nombre de " +  elem_selec + " por " + elem_modif
+        log_movimientos(msg)
     
     else:
         msg = "renombrar: El fichero o directorio no existe: {}".format(elem_selec)
-        print(msg)
+        printError(msg)
         log_error(msg)
 
 ############################################################################
@@ -211,37 +224,20 @@ def copiar(entrada):
     #os.path.isfile : verifica si es un archivo retorna True o False
     #os.path.isdir : verifica si una ruta es una carpeta retorna True o False
     #shutil.copy : copia archivos y mantiene propiedad y permisos
+    origen     = os.path.join(os.getcwd(), entrada[1])
+    destino    = os.path.abspath(entrada[2])
 
-    opcion =  entrada[1]
-    if opcion != "-R":
-        origen     = os.path.join(os.getcwd(), entrada[1])
-        destino    = os.path.join(os.getcwd(), entrada[2])
-        #Si existe y es un archivo
-        if os.path.isfile(origen):
-            shutil.copy(origen, destino)
-            msg = "->copiar : se copio el archivo " + origen + " a " + destino
-            
-            log_movimientos(msg)
-        else:
-            msg = "copiar: El archivo no existe : " + origen
-            print(msg)
-            log_error(msg)
+    try:
+        shutil.copy(origen, destino)
+    except Exception:
+        msg = "Error al realizar la copia"
+        printError(msg)
+        log_error(msg)
     else:
-        origen     = os.path.join(os.getcwd(), entrada[2])
-        destino    = os.path.join(os.getcwd(), entrada[3])
-        if os.path.isdir(origen):
-            if os.path.isdir(destino):
-                shutil.copytree(origen,destino)
-                return "->copiar : se copio el archivo " + origen + " a " + destino
-            else:
-                msg = "copiar: El  directorio no existe : " + destino 
-                print(msg)
-                log_error(str(msg))
-        else:
-           msg = "copiar: El directorio no existe : " + origen
-           print(msg)
-           log_error(msg)
-
+        msg = "->copiar : se copio el archivo " + origen + " a " + destino
+        log_movimientos(msg)
+        
+   
 ############################################################################
 
 def mover(entrada):
@@ -253,10 +249,11 @@ def mover(entrada):
 
     if os.path.exists(origen) and os.path.exists(destino):
         shutil.move(origen,destino)
-        return "->mover : se movio el archivo " + origen + " a " + destino
+        msg =  "->mover : se movio el archivo " + origen + " a " + destino
+        log_movimientos(msg)
     else:
         msg = "mover: no existe ese directorio o carpeta: {}".format(origen,destino)
-        print(msg)
+        printError(msg)
         log_error(msg)
 
 
@@ -274,10 +271,11 @@ def permiso(entrada):
             os.chmod(archivo,num)
         except Exception :
             msg = "permisos : Error no se puedo realizar la operacion."
-            print(msg)
+            printError(msg)
             log_error(msg)
         else:
-            return "->permiso : se modifico el permiso del archivo " + archivo + " a " + str(num)
+            msg = "->permiso : se modifico el permiso del archivo " + archivo + " a " + str(num)
+            log_movimientos(msg)
            
             
 ############################################################################
@@ -291,16 +289,23 @@ def propietario(entrada):
     usuario = entrada[2]
     grupo   = entrada[3]   
     if existe_usuario(usuario) :
-        if existe_grupo(grupo) :    
-            chown_recuersivo(path,usuario)
-            return "->propietario : se cambio el duenho del archivo " + path 
+        if existe_grupo(grupo) :
+            try:
+                shutil.chown(path,usuario,grupo)
+            except Exception:
+                msg = "propietario: Error inesperado"
+                printError(msg)
+                log_error(msg)
+            else:
+                msg =  "->propietario : se cambio el duenho del archivo " + path 
+                log_movimientos(msg)
         else:
             msg = "propietario : No existe el grupo : {} ".formatformat(grupo)
-            print(msg)
+            printError(msg)
             log_error(msg)
     else:
         msg = "propietario : No existe el usuario : {} ".format(usuario)
-        print(msg)
+        printError(msg)
         log_error(msg)
 
 ############################################################################
@@ -380,7 +385,7 @@ def add_usuario(entrada):
     if is_root():
         if existe_usuario(usuario):
             msg = "addusuario : El usuario " + usuario + " ya existe"
-            print(msg)
+            printError(msg)
             log_error(msg)
         else:
             print("Añadiendo el usuario "            + "'" + usuario + "'....")
@@ -428,33 +433,17 @@ def add_usuario(entrada):
                 #agg nuevo grupo#
                 add_grupo(usuario,grupo)
                 shutil.copytree(ruta[3],home)
-                chown_recuersivo(home,usuario)
-        
-                return "->addusuario : agrego al usuario " + usuario
+                msg =  "->addusuario : agrego al usuario " + usuario
+                log_movimientos(msg)
             else:
                 msg = print("addusuario : se cancelo el registro")
+                printError(msg)
     else:
         msg = "addusuario : Sólo root puede añadir un usuario o un grupo al sistema."
-        print(msg)
+        printError(msg)
         log_error(msg)
 
 ############################################################################
-
-def chown_recuersivo(home,usuario):
-    """
-       Cambia de forma recursiva el propietario y grupo
-    """
-
-    for ruta_relativa,directorios,archivos in os.walk(home):
-        ruta_absoluta = os.path.normpath(os.path.abspath(os.path.join(home,ruta_relativa)))
-        shutil.chown(ruta_relativa,usuario,usuario)
-        for items in directorios:
-            ruta_absoluta = os.path.normpath(os.path.abspath(os.path.join(home,items)))
-            shutil.chown(ruta_absoluta,usuario,usuario)
-        for items in archivos:
-            ruta_absoluta = os.path.normpath(os.path.abspath(os.path.join(home,items)))
-            shutil.chown(ruta_absoluta,usuario,usuario)
-
 
 def add_grupo(usuario,grupo):
     """
@@ -493,16 +482,17 @@ def password(entrada):
                         lineas[i][1] = cifrado
                     lineas[i] = ":".join(lineas[i])
                     archivo.write(lineas[i]+ "\n")
-            return "->contrasenha : se cambio la contrasenha del usuario  " + usuario 
+            msg =  "->contrasenha : se cambio la contrasenha del usuario  " + usuario 
+            log_movimientos(msg)
         
                     
         else:
             msg = "password : El usuario no existe"
-            print(msg)
+            printError(msg)
             log_error(msg)
     else :
         msg = "password : Necesitas ser usuario root"
-        print(msg)
+        printError(msg)
         log_error(msg)
 
 ############################################################################
@@ -526,6 +516,10 @@ def name_host(host_name):
             archivo.write[lineas[i] + "\n"]
             
 ############################################################################
+def printError(msg):
+    print(negrita + rojo + msg)
+############################################################################
+
 def grep(entrada):
     """
        Busca patrones en un archivo 
@@ -537,7 +531,8 @@ def grep(entrada):
             linea = linea.strip()
             if re.search(palabra, linea):
                 print(linea.replace(palabra,Fore.YELLOW + palabra + Fore.WHITE))
-    return "->grep : se busco la palabra " + palabra + " en " + ruta
+    msg = "->grep : se busco la palabra " + palabra + " en " + ruta
+    log_movimientos(msg)
 
 ############################################################################
 def validar_h_trabajo(hora):
@@ -562,7 +557,7 @@ def otros_cmd(entrada):
         subprocess.run(entrada)
     except Exception:
         msg = "otroscmd : ocurrio un error "
-        print(msg)
+        printError(msg)
         log_error(msg)
     else:
         return
@@ -589,10 +584,11 @@ def crearDir(entrada):
         os.mkdir(os.path.abspath(ruta))
     except Exception:
         msg = "creardir : no se pudo crear ruta"
-        print(msg)
+        printError(msg)
         log_error(msg)
     else:
-        return "->creardir : se creo la ruta : " + ruta
+        msg = "->creardir : se creo la ruta : " + ruta
+        log_movimientos(msg)
 
 ############################################################################
 def transFtp(entrada):
@@ -624,7 +620,7 @@ def transFtp(entrada):
                     #mensaje para el log
                     msg = "FTP Subida : " + archivo
                     status = 1 
-                    #log_transferencias(msg)
+                    log_transferencias(msg)
                     #Cerramos conexion
                     servidorFtp.quit()
                     break
@@ -640,15 +636,15 @@ def transFtp(entrada):
                     #mensajes para el log
                     msg = "FTP Descargado : " +  archivo
                     status =  1 #exitoso -> 1  #error -> 0
-                    #log_transferencias(msg)
+                    log_transferencias(msg)
                     break
             elif opcion == "3":
                 servidorFtp.dir()
                 opcion = int(input("-1 Subir/n-2 Descargar /n-3 Ver"))
     except Exception:
         msg = "ftp : Ocurrio un error en la transferencia"
-        #log_transferencias(msg)
-        print(msg)
+        log_transferencias(msg)
+        printError(msg)
 ############################################################################
 def ayudaa(entrada):
     print(" ir  [ruta] \n addusuario [usuario] \n listar [sin parametros] \n copiar [origen,destino] ")
@@ -665,9 +661,10 @@ def levantar(entrada):
         os.fork()
     except Exception:
         msg = "ocurrio un problema al levanta el demonio"
-        print(msg)
+        printError(msg)
     else :
-        return "->levantar : se levanto un proceso : " + str(os.fork())
+        msg  = "->levantar : se levanto un proceso : " + str(os.fork())
+        log_movimientos(msg)
 
 def matar(entrada):
     """
@@ -681,48 +678,41 @@ def matar(entrada):
                 os.kill(_pid,9)
     except Exception:
         msg = "->matar : Ocurrio un error al intentar matar el demonio"
-        print(msg)
+        printError(msg)
     else:
-       return "matar : Se mato el proceso : " + str(_pid)
-def lsprocess(entrada):
-    try:
-        for process in psutil.process_iter():
-            
-            if process.pid == _pid:
-                os.kill(_pid,9)
-    except Exception:
-        msg = "->matar : Ocurrio un error al intentar matar el demonio"
-        print(msg)
-    else:
-       return "matar : Se mato el proceso : " + str(_pid)
+       msg =  "matar : Se mato el proceso : " + str(_pid)
+       log_movimientos(msg)
 
 ############################################################################
+def pwdmio(entrada):
+    print(os.getcwd())
+
 
 dic_command= {"ir"       :[ir,2]        , "addusuario":[add_usuario,2] ,"listar"    :[ls,1],"copiar"        :[copiar,3],
               "renombrar":[renombrar,3] , "mover"     :[mover,3],"propietario"      :[propietario,4],"salir":[salir,1],
               "password" :[password,2]  , "grep"      :[grep,3] ,"creardir"         :[crearDir,2]   , "ftp" :[transFtp,1],
               "help"     :[ayudaa,1]    , "matar"     :[matar,2],"levantar"         :[levantar,1], "permisos" :[permiso,3],
-              "transferencias":[transFtp,1]}
+              "transferencias":[transFtp,1] , "pwdmio":[pwdmio,1]}
 ############################################################################
 def main():
     ##Datos##
     entra = hora_fecha() 
     while(True):
         existe = False
-        entrada = input(Fore.GREEN + getuser() + "@" + os.uname().nodename +
-                        Fore.WHITE +  ":"      +  Fore.BLUE + os.getcwd()  +  
-                        "$ "       + Fore.WHITE).split()
+        entrada = input(negrita + verde +  getuser()  + "@" + os.uname().nodename +
+                        blanco  +  ":"  +  Fore.BLUE  + os.getcwd()               +
+                        blanco  +  "$ " +  normal     + blanco).split()
         
         for cmd in dic_command:
             if cmd == entrada[0]:
                 existe = True
                 if len(entrada) == 1 and dic_command[entrada[0]][1] == 1:
-                    log_movimientos(dic_command[cmd][0](entrada))
+                    dic_command[cmd][0](entrada)
                 elif len(entrada) == dic_command[entrada[0]][1]:
-                    log_movimientos(dic_command[cmd][0](entrada))
+                    dic_command[cmd][0](entrada)
                 else:
                     msg = cmd + ": Error de argumentos consulte el comando help"
-                    print(msg)
+                    printError(msg)
                     log_error(msg)
         if existe == False:
             otros_cmd(entrada)
